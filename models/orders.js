@@ -75,7 +75,9 @@ const Orders = sequelize.define(
   },
   {
     tableName: "orders",
-
+    timestamps: true, // Define timestamps for createdAt and updatedAt
+    createdAt: "created_at", // Define custom column name for createdAt
+    updatedAt: "updated_at", // Define custom column name for updatedAt
   }
 );
 

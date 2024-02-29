@@ -1,6 +1,7 @@
 // config/db.js
 const { Sequelize } = require('sequelize');
 
+
 // Create a new Sequelize instance
 const sequelize = new Sequelize('nutrawebsite', 'root', '', {
     host: 'localhost',
@@ -15,8 +16,12 @@ async function testConnection() {
 
         // Import models after the database connection is established
         const User = require('../models/user');
+        const Orders = require('../models/orders')
+        const Inventory = require("../models/inventory")
         // Sync models after importing
         await User.sync();
+        await Orders.sync()
+        await Inventory.sync()
     } catch (error) {
         console.error('Unable to connect to the database:', error);
     }

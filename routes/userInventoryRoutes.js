@@ -1,68 +1,54 @@
 const express = require('express');
+const Inventory = require('../models/inventory');
 const router = express.Router();
-
+const fetchUser = require('../middleware/fetchUser')
 // Example data (replace with your database operations)
-let orders = [
-  { id: 1, date: '2024-02-27', skuCode: 'SKU001', brand: 'Brand A', issuedQty: 10, delivered: 7, damageLost: 1, balanceQty: 2 },
-  { id: 2, date: '2024-02-28', skuCode: 'SKU002', brand: 'Brand B', issuedQty: 20, delivered: 18, damageLost: 0, balanceQty: 2 },
-  { id: 3, date: '2024-02-29', skuCode: 'SKU003', brand: 'Brand C', issuedQty: 15, delivered: 12, damageLost: 1, balanceQty: 2 }
-];
 
-// GET all orders
-router.get('/orders', (req, res) => {
-  res.json(orders);
-});
 
-// GET a specific order by ID
-router.get('/orders/:id', (req, res) => {
-  const { id } = req.params;
-  const order = orders.find(order => order.id === parseInt(id));
-  if (order) {
-    res.json(order);
-  } else {
-    res.status(404).json({ error: 'Order not found' });
+
+router.get("/getinvetory", fetchUser, async (req, res) => {
+  try {
+    const inventory = await Inventory.findAll({ where: { user: req.user.id } });
+    res.json(inventory);
+    // console.log(inventory)
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
   }
 });
 
-// POST a new order
-router.post('/orders', (req, res) => {
-  const { date, skuCode, brand, issuedQty, delivered, damageLost, balanceQty } = req.body;
-  const newOrder = { 
-    id: orders.length + 1, 
-    date, 
-    skuCode, 
-    brand, 
-    issuedQty, 
-    delivered, 
-    damageLost, 
-    balanceQty 
-  };
-  orders.push(newOrder);
-  res.status(201).json(newOrder);
-});
+router.post("/addinventory", fetchUser, async (req, res) => {
+  try {
+    // Create a new order associated with the authenticated user
 
-// PUT update an existing order
-router.put('/orders/:id', (req, res) => {
-  const { id } = req.params;
-  const { date, skuCode, brand, issuedQty, delivered, damageLost, balanceQty } = req.body;
-  const index = orders.findIndex(order => order.id === parseInt(id));
-  if (index !== -1) {
-    orders[index] = { id: parseInt(id), date, skuCode, brand, issuedQty, delivered, damageLost, balanceQty };
-    res.json(orders[index]);
-  } else {
-    res.status(404).json({ error: 'Order not found' });
-  }
-});
+    const {
+      SKU_Code,
+      Cust_Name,
+      Brand,
+      Issued_Qty,
+      Delivered,
+      Damage_Lost,
+      Balance_Qty   
+    } = req.body;
 
-// DELETE an existing order
-router.delete('/orders/:id', (req, res) => {
-  const { id } = req.params;
-  const index = orders.findIndex(order => order.id === parseInt(id));
-  if (index !== -1) {
-    orders.splice(index, 1);
-    res.status(204).end();
-  } else {
-    res.status(404).json({ error: 'Order not found' });
+    const newInventory = await Inventory.create({
+      user: req.user.id, // Assuming req.user contains the authenticated user's information
+      SKU_Code,
+      Cust_Name,
+      Brand,
+      Issued_Qty,
+      Delivered,
+      Damage_Lost,
+      Balance_Qty
+  
+    });
+
+    res.status(201).json(newInventory);
+
+    // Return the newly created order
+    // res.status(201).json(newOrder);
+  } catch (error) {
+    console.error("Error creating order:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

@@ -1,66 +1,150 @@
-const express = require('express');
+const express = require("express");
+const fetchUser = require("../middleware/fetchUser");
 const router = express.Router();
+const Orders = require("../models/orders");
+const User = require("../models/user");
+const { Op } = require("sequelize");
 
-// Example data (replace with your database operations)
-let orders = [
-  { id: 1, date: '2024-02-27', orderId: 'ORD001', customerName: 'John Doe', codAmount: 100, status: 'Pending' },
-  { id: 2, date: '2024-02-28', orderId: 'ORD002', customerName: 'Jane Smith', codAmount: 150, status: 'Delivered' },
-  { id: 3, date: '2024-02-29', orderId: 'ORD003', customerName: 'Alice Johnson', codAmount: 200, status: 'Shipped' }
-];
-
-// GET all orders
-router.get('/orders', (req, res) => {
-  res.json(orders);
-});
-
-// GET a specific order by ID
-router.get('/orders/:id', (req, res) => {
-  const { id } = req.params;
-  const order = orders.find(order => order.id === parseInt(id));
-  if (order) {
+//Router 1: for getting all the orders of the specific logged in user GET Request
+router.get("/getorders", fetchUser, async (req, res) => {
+  try {
+    const order = await Orders.findAll({ where: { user: req.user.id } });
     res.json(order);
-  } else {
-    res.status(404).json({ error: 'Order not found' });
+    console.log();
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
   }
 });
 
-// POST a new order
-router.post('/orders', (req, res) => {
-  const { date, orderId, customerName, codAmount, status } = req.body;
-  const newOrder = { 
-    id: orders.length + 1, 
-    date, 
-    orderId, 
-    customerName, 
-    codAmount, 
-    status 
-  };
-  orders.push(newOrder);
-  res.status(201).json(newOrder);
-});
+//Router 2: for making orders for specific logged in user
+router.post("/users/orders", fetchUser, async (req, res) => {
+  try {
+    // Create a new order associated with the authenticated user
 
-// PUT update an existing order
-router.put('/orders/:id', (req, res) => {
-  const { id } = req.params;
-  const { date, orderId, customerName, codAmount, status } = req.body;
-  const index = orders.findIndex(order => order.id === parseInt(id));
-  if (index !== -1) {
-    orders[index] = { id: parseInt(id), date, orderId, customerName, codAmount, status };
-    res.json(orders[index]);
-  } else {
-    res.status(404).json({ error: 'Order not found' });
+    const {
+      Cust_Name,
+      COD_Amt,
+      Status,
+      address,
+      mobile_num,
+      product_name,
+      qty,
+      alt_mobile_num,
+      payment_mode,
+      remark,
+      reason,
+    } = req.body;
+
+    const newOrder = await Orders.create({
+      user: req.user.id, // Assuming req.user contains the authenticated user's information
+      Cust_Name,
+      address,
+      mobile_num,
+      product_name,
+      qty,
+      alt_mobile_num,
+      payment_mode,
+      remark,
+      reason,
+      COD_Amt,
+      Status,
+    });
+
+    // Return the newly created order
+    res.status(201).json(newOrder);
+  } catch (error) {
+    console.error("Error creating order:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// DELETE an existing order
-router.delete('/orders/:id', (req, res) => {
-  const { id } = req.params;
-  const index = orders.findIndex(order => order.id === parseInt(id));
-  if (index !== -1) {
-    orders.splice(index, 1);
-    res.status(204).end();
-  } else {
-    res.status(404).json({ error: 'Order not found' });
+// Router 3:  to get orders for the logged-in user
+router.get("/users/orders", fetchUser, async (req, res) => {
+  try {
+    // Fetch orders associated with the logged-in user
+    const userOrders = await Orders.findAll({
+      where: { user: req.user.id },
+    });
+
+    res.json(userOrders);
+  } catch (error) {
+    console.error("Error fetching user orders:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.put("/updateorders/:id", fetchUser, async (req, res) => {
+  const {
+    Cust_Name,
+    address,
+    mobile_num,
+    product_name,
+    qty,
+    alt_mobile_num,
+    payment_mode,
+    remark,
+    reason,
+    COD_Amt,
+    Status,
+  } = req.body;
+
+  try {
+    // Find the order by its primary key (Order_Id)
+    let order = await Orders.findByPk(req.params.id);
+
+    // Check if the order exists
+    if (!order) {
+      return res.status(404).send("Order not found");
+    }
+
+    // Check if the authenticated user is authorized to update the order
+    if (order.user !== req.user.id) {
+      return res.status(401).send("Unauthorized access");
+    }
+
+    // Update the order fields with the new data
+    if (Cust_Name) {
+      order.Cust_Name = Cust_Name;
+    }
+    if (address) {
+      order.address = address;
+    }
+    if (mobile_num) {
+      order.mobile_num = mobile_num;
+    }
+    if (product_name) {
+      order.product_name = product_name;
+    }
+    if (qty) {
+      order.qty = qty;
+    }
+    if (alt_mobile_num) {
+      order.alt_mobile_num = alt_mobile_num;
+    }
+    if (payment_mode) {
+      order.payment_mode = payment_mode;
+    }
+    if (remark) {
+      order.remark = remark;
+    }
+    if (reason) {
+      order.reason = reason;
+    }
+    if (COD_Amt) {
+      order.COD_Amt = COD_Amt;
+    }
+    if (Status) {
+      order.Status = Status;
+    }
+
+    // Save the updated order to the database
+    await order.save();
+
+    // Respond with the updated order
+    res.json({ order });
+  } catch (error) {
+    console.error("Error updating order:", error);
+    res.status(500).send("Internal server error");
   }
 });
 

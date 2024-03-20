@@ -88,7 +88,7 @@ router.post(
         },
       };
 
-      const authToken = jwt.sign(data, JWT_SECRET, 
+      const authToken = jwt.sign(data, JWT_SECRET
         // { expiresIn: "10m" }
         );
       res.json({ success: true, authToken });

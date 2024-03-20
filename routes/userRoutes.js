@@ -38,6 +38,8 @@ router.post(
       const data = {
         user: {
           id: user.id,
+          name: user.name
+        
         },
       };
       const authToken = jwt.sign(data, JWT_SECRET);
@@ -52,55 +54,58 @@ router.post(
   }
 );
 
-router.post("/login", [
- 
-  body("email", "Enter a valid email").isEmail(),
-  body("password", "Password cannot be blank").exists(),
-], async (req, res) => {
-  let success = false;
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ success, errors: errors.array() });
-  }
-  const { email, password } = req.body;
-  try {
-    // Check if user with this email exists
-    let user = await User.findOne({ where: { email } });
-    if (!user) {
-      return res.status(400).json({ success, error: "Invalid credentials" });
+router.post(
+  "/login",
+  [
+    body("email", "Enter a valid email").isEmail(),
+    body("password", "Password cannot be blank").exists(),
+  ],
+  async (req, res) => {
+    let success = false;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success, errors: errors.array() });
     }
+    const { email, password } = req.body;
+    try {
+      // Check if user with this email exists
+      let user = await User.findOne({ where: { email } });
+      if (!user) {
+        return res.status(400).json({ success, error: "Invalid credentials" });
+      }
 
-   
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      success = false;
-      return res.status(400).json({ success, error: "Invalid credentials" });
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        success = false;
+        return res.status(400).json({ success, error: "Invalid credentials" });
+      }
+
+      const data = {
+        user: {
+          id: user.id,
+          name: user.name
+        
+        },
+      };
+
+      const authToken = jwt.sign(data, JWT_SECRET, 
+        // { expiresIn: "10m" }
+        );
+      res.json({ success: true, authToken });
+      console.log("data of login", data);
+      console.log("Auth_Token", authToken);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Internal Server Error" });
     }
-
-    const data = {
-      user: {
-        id: user.id,
-      },
-    };
-
-    const authToken = jwt.sign(data, JWT_SECRET);
-    // success: true;
-    res.json({ success: true, authToken });
-    console.log("data of login", data);
-    console.log("Auth_Token", authToken);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
   }
-});
-
-
+);
 
 router.post("/getuser", fetchUser, async (req, res) => {
   try {
     const userId = req.user.id;
     const user = await User.findByPk(userId, {
-      attributes: { exclude: ['password'] } 
+      attributes: { exclude: ["password"] },
     });
     res.send(user);
   } catch (error) {
@@ -108,7 +113,5 @@ router.post("/getuser", fetchUser, async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
-
-
 
 module.exports = router;

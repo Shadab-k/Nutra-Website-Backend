@@ -3,7 +3,7 @@ const fetchUser = require("../middleware/fetchUser");
 const router = express.Router();
 const Orders = require("../models/orders");
 const User = require("../models/user");
-const { Op } = require("sequelize");
+// const { Op } = require("sequelize");
 
 //Router 1: for getting all the orders of the specific logged in user GET Request
 router.get("/getorders", fetchUser, async (req, res) => {

@@ -18,10 +18,13 @@ async function testConnection() {
         const User = require('../models/user');
         const Orders = require('../models/orders')
         const Inventory = require("../models/inventory")
+        const Transporter = require('../models/Transporter')
         // Sync models after importing
         await User.sync();
         await Orders.sync()
         await Inventory.sync()
+        await Transporter.sync()
+        
     } catch (error) {
         console.error('Unable to connect to the database:', error);
     }

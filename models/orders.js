@@ -1,4 +1,4 @@
-// Import required modules
+ // Import required modules
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 const User = require("./user"); // Import the User model
@@ -22,6 +22,17 @@ const Orders = sequelize.define(
       allowNull: false,
       primaryKey: true, // Define Order_Id as primary key
     },
+
+    // Order_Date: {
+    //   type: DataTypes.DATEONLY, // Use DATE type for Order_Date
+    //   allowNull: false,
+    //   defaultValue: equelize.fn('NOW'),
+    //   get() {
+    //     const orderDate = this.getDataValue('Order_Date');
+    //     return orderDate ? `${orderDate.getDate()}/${orderDate.getMonth() + 1}/${orderDate.getFullYear()}` : null;
+    //   },
+    // },
+    
 
     Order_Date: {
       type: DataTypes.DATEONLY, // Use DATE type for Order_Date

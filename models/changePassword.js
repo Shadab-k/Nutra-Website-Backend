@@ -32,7 +32,7 @@ const User = sequelize.define(
   {
     tableName: "bolt_dc_user_master",
     timestamps: true, // Enable timestamps
-    createdAt: "added_date", // Customize the name of the createdAt field if needed
+    // createdAt: "added_date", // Customize the name of the createdAt field if needed
     updatedAt: false,
   }
 );

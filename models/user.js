@@ -2,6 +2,7 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 const Transporter = require("./Transporter");
 
+
 const User = sequelize.define(
   "User",
   {
@@ -120,4 +121,5 @@ const User = sequelize.define(
 );
 
 User.belongsTo(Transporter, { foreignKey: "tranporter_id", targetKey: "id" });
+
 module.exports = User;
